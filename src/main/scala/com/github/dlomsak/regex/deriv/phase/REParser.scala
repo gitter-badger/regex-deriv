@@ -45,14 +45,15 @@ object REParser extends Parsers {
   def factor: Parser[RegexAST] =
     base <~ STAR ^^ StarAST |
     base <~ PLUS ^^ { b => CatAST(b, StarAST(b)) } |
+    base <~ HOOK ^^ { b => OrAST(EmptyAST, b) } |
     base
 
   def base: Parser[RegexAST] =
-    BACKSLASH ~> meta ^^ { x => CharAST(x.asChar )} |
+    BACKSLASH ~> meta ^^ { x => CharAST(x.asChar)} |
     literal |
     LPAREN ~> regex <~ RPAREN
 
-  def meta:Parser[RegexToken] = LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | BACKSLASH
+  def meta:Parser[RegexToken] = LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH
 
   def literal: Parser[CharAST] = {
     accept("character literal", { case lit @ CHARLIT(c) => CharAST(c) })

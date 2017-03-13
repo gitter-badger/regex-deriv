@@ -37,7 +37,7 @@ object RELexer extends Parsers {
   }
 
   def program:Parser[List[RegexToken]] = phrase(rep(token))
-  def token = star | plus | alt | lparen | rparen | lbracket | rbracket | lit
+  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | lit
   def star:Parser[RegexToken] = '*' ^^ { _ => STAR }
   def plus:Parser[RegexToken] = '+' ^^ { _ => PLUS }
   def alt:Parser[RegexToken] = '|' ^^ { _ => ALT }
