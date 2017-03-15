@@ -22,7 +22,7 @@ case class RegExpr(ast: RegexAST) {
   /**
     * determines whether a given input string matches the given regular expression
     */
-  def matches(input: String): Boolean = acceptsEmpty(input.foldLeft(ast)((r, c) => derive(c, r)))
+  def matches(input: String): Boolean = acceptsEmpty(derive(input))
 
   /**
     * perform derivation on the expression for a string of characters
