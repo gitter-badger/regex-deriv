@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/dlomsak/regex-deriv.svg?style=svg)](https://circleci.com/gh/dlomsak/regex-deriv)
+
 Regex-Deriv
 ==============
 A regular expression implementation with derivative-based evaluation in Scala, inspired by the paper [Regular Expression Sub-matching using Partial Derivatives](http://www.home.hs-karlsruhe.de/~suma0002/publications/ppdp12-part-deriv-sub-match.pdf) by Martin Sulzmann and Kenny Zhuo Ming Lu.
