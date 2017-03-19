@@ -18,6 +18,8 @@ dependencies:
 compile:
   override:
     - sbt ++$SCALA_VERSION package
+  post:
+    - mv target/scala-$SCALA_BINARY_VERSION/*.jar  $CIRCLE_ARTIFACTS/
 
 test:
   override: 
