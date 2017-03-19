@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/dlomsak/regex-deriv.svg?style=svg)](https://circleci.com/gh/dlomsak/regex-deriv)
+[![CircleCI](https://circleci.com/gh/dlomsak/regex-deriv.svg?style=shield)](https://circleci.com/gh/dlomsak/regex-deriv)
 
 Regex-Deriv
 ==============

@@ -1,7 +1,10 @@
 name := "regex-deriv"
 
-version := "1.0"
+version := "0.1"
 
 scalaVersion := "2.11.8"
 
-libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4"
+libraryDependencies ++= Seq(
+  "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+  "org.scalatest" % "scalatest_2.11" % "3.0.1" % "test"
+)
