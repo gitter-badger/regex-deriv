@@ -6,7 +6,7 @@ A regular expression implementation with derivative-based evaluation in Scala, i
 
 Goals
 -----
-The main goal is to provide a regex library that avoids backtracking and extra-regular features (e.g., back matching) to achieve stable performance without pathological cases. While the Thompson caching NFA construction is a well-known way to achieve this with state machines, this project takes a pure approach: computing a new regex as each character of input is read. Structural sharing / sub-AST re-use is done as often as possible to minimize allocations. Finally, the lexer/parser should be extensible to support additional syntax/semantics to traditional regular expressions.
+The main goal is to provide a regex library that avoids backtracking and extra-regular features (e.g., back matching) to achieve stable performance without pathological cases. While the Thompson caching NFA construction is a well-known way to achieve this, the state space can get large. Finally, the lexer/parser should be extensible to support additional syntactic elements that expand into standard regular expressions.
 
 Roadmap
 -------
@@ -15,6 +15,7 @@ Roadmap
 * add tests(some added, need more; also consider property-based testing)
 * ~~CI with code coverage~~(done)
 * ~~support character classes~~
+* implement automaton construction, move away from matching via AST re-writing
 * support common escape sequences such as \d for numbers
 * support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)
 * support group extraction
