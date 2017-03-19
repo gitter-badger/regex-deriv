@@ -15,6 +15,8 @@ case object LPAREN extends RegexToken('(')
 case object RPAREN extends RegexToken(')')
 case object LBRACKET extends RegexToken('[')
 case object RBRACKET extends RegexToken(']')
+case object CARET extends RegexToken('^')
+case object DASH extends RegexToken('-')
 case object BACKSLASH extends RegexToken('\\')
 case class CHARLIT(c: Char) extends RegexToken(c)
 
@@ -37,16 +39,31 @@ object RELexer extends Parsers {
   }
 
   def program:Parser[List[RegexToken]] = phrase(rep(token))
-  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | lit
+
+  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | caret | dash | lit
+
   def star:Parser[RegexToken] = '*' ^^ { _ => STAR }
+
   def plus:Parser[RegexToken] = '+' ^^ { _ => PLUS }
+
   def alt:Parser[RegexToken] = '|' ^^ { _ => ALT }
+
   def hook:Parser[RegexToken] = '?' ^^ { _ => HOOK }
+
   def lparen:Parser[RegexToken] = '(' ^^ { _ => LPAREN }
+
   def rparen:Parser[RegexToken] = ')' ^^ { _ => RPAREN }
+
   def lbracket:Parser[RegexToken] = '[' ^^ { _ => LBRACKET }
+
   def rbracket:Parser[RegexToken] = ']' ^^ { _ => RBRACKET }
+
+  def caret:Parser[RegexToken] = '^' ^^ { _ => CARET }
+
+  def dash:Parser[RegexToken] = '-' ^^ { _ => DASH }
+
   def backslash:Parser[RegexToken] = '\\' ^^ { _ => BACKSLASH }
+
   def lit:Parser[RegexToken] = accept("character literal", { case c => CHARLIT(c) })
 }
 

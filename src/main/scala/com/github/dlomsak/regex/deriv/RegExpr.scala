@@ -37,6 +37,10 @@ case class RegExpr(ast: RegexAST) {
     case NullAST => NullAST
     case EmptyAST => NullAST
     case CharAST(c2) => if (c2 == c) EmptyAST else NullAST
+    case CharClassAST(chars, inverted) =>
+      val isMember = chars.contains(c)
+      val isMatch = if (inverted) !isMember else isMember
+      if (isMatch) EmptyAST else NullAST
     case OrAST(l, r) => (derive(c, l), derive(c, r)) match {
       case (NullAST, NullAST) => NullAST
       case (NullAST, dr) => dr

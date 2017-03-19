@@ -19,6 +19,7 @@ final case class OrAST(left: RegexAST, right: RegexAST) extends RegexAST
 final case class CatAST(left: RegexAST, right: RegexAST) extends RegexAST
 final case class StarAST(regex: RegexAST) extends RegexAST
 final case class CharAST(c: Char) extends RegexAST
+final case class CharClassAST(cs: Set[Char], inverted: Boolean) extends RegexAST
 
 object REParser extends Parsers {
   override type Elem = RegexToken
@@ -31,16 +32,13 @@ object REParser extends Parsers {
     }
   }
 
-  def program: Parser[RegexAST] = phrase(regex)
+  def program: Parser[RegexAST] = phrase(opt(regex)) ^^ { _.getOrElse(EmptyAST) }
 
   def regex: Parser[RegexAST] =
     term ~ ALT ~ regex ^^ { case l ~ _ ~ r => OrAST(l, r) } |
     term
 
-  def term: Parser[RegexAST] = rep1(factor) ^^ {
-    case List(r) => r
-    case rs => rs.reduceLeft(CatAST)
-  }
+  def term: Parser[RegexAST] = rep1(factor) ^^ { _.reduceLeft(CatAST) }
 
   def factor: Parser[RegexAST] =
     base <~ STAR ^^ StarAST |
@@ -49,11 +47,22 @@ object REParser extends Parsers {
     base
 
   def base: Parser[RegexAST] =
-    BACKSLASH ~> meta ^^ { x => CharAST(x.asChar)} |
-    literal |
+    singleChar |
+    LBRACKET ~> opt(CARET) ~ rep1(charRange) <~ RBRACKET ^^
+      { case invert ~ chars => CharClassAST(chars.reduce(_ ++ _), invert.isDefined) } |
     LPAREN ~> regex <~ RPAREN
 
-  def meta:Parser[RegexToken] = LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH
+  def charRange: Parser[Set[Char]] = {
+    literal ~ DASH ~ literal ^^ { case start ~ _ ~ stop => Set(start.c to stop.c:_*) } |
+    singleChar ^^ { ch => Set(ch.c) }
+  }
+
+  def singleChar: Parser[CharAST] =
+    BACKSLASH ~> meta ^^ { x => CharAST(x.asChar) } |
+    literal
+
+  def meta: Parser[RegexToken] =
+    LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH | CARET | DASH
 
   def literal: Parser[CharAST] = {
     accept("character literal", { case lit @ CHARLIT(c) => CharAST(c) })
