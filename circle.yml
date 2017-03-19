@@ -27,3 +27,4 @@ test:
   post:
     - mv target/scala-$SCALA_BINARY_VERSION/coverage-report  $CIRCLE_ARTIFACTS/coverage-report
     - mv target/scala-$SCALA_BINARY_VERSION/scoverage-report $CIRCLE_ARTIFACTS/scoverage-report
+    - mv target/test-reports/*.xml $CIRCLE_TEST_REPORTS/reports/

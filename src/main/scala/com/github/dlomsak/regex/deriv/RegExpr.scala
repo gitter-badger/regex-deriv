@@ -14,6 +14,7 @@ case class RegExpr(ast: RegexAST) {
     case NullAST => false
     case EmptyAST => true
     case CharAST(_) => false
+    case CharClassAST(chars, _) => chars.isEmpty
     case OrAST(l, r) => acceptsEmpty(l) || acceptsEmpty(r)
     case CatAST(l, r) => acceptsEmpty(l) && acceptsEmpty(r)
     case StarAST(_) => true
