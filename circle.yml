@@ -1,7 +1,7 @@
 machine: 
   environment:
     SCALA_VERSION: 2.11.8
-    SCALA_BINARY_VERSION: 2.11.8
+    SCALA_BINARY_VERSION: 2.11
   java:
     version: oraclejdk8
 
