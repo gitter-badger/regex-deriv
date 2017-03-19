@@ -2,7 +2,7 @@
 
 Regex-Deriv
 ==============
-A regular expression implementation with derivative-based evaluation in Scala, inspired by the paper [Regular Expression Sub-matching using Partial Derivatives](http://www.home.hs-karlsruhe.de/~suma0002/publications/ppdp12-part-deriv-sub-match.pdf) by Martin Sulzmann and Kenny Zhuo Ming Lu.
+A Scala regular expression implementation with derivative-based evaluation described in the paper [Regular-expression derivatives re-examined](http://people.cs.uchicago.edu/~jhr/papers/2009/jfp-re-derivatives.pdf) by Scott Owens, John Reppy, and Aaron Turon.
 
 Goals
 -----
@@ -19,5 +19,5 @@ Roadmap
 * support common escape sequences such as \d for numbers
 * support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)
 * support group extraction
-* support named groups
+* support named groups ala [Regular Expression Sub-matching using Partial Derivatives](http://www.home.hs-karlsruhe.de/~suma0002/publications/ppdp12-part-deriv-sub-match.pdf) by Martin Sulzmann and Kenny Zhuo Ming Lu
 * performance testing against scala.util.matching.regex
