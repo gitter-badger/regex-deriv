@@ -12,8 +12,8 @@ Roadmap
 -------
 * ~~Lexer and parser for basic regex operators~~ (done)
 * ~~Implement regex derivatives for all AST structures and method for performing string matching~~ (done)
-* add tests
-* CI with code coverage
+* add tests(some added, need more; also consider property-based testing)
+* ~~CI with code coverage~~(done)
 * support character classes
 * support common escape sequences such as \d for numbers
 * support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)
