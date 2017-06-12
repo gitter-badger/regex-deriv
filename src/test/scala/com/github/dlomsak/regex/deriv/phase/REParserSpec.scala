@@ -1,6 +1,6 @@
 package com.github.dlomsak.regex.deriv.phase
 
-import com.github.dlomsak.regex.deriv.BaseSpec
+import com.github.dlomsak.regex.deriv._
 
 /**
   * Created by enki on 3/19/17.

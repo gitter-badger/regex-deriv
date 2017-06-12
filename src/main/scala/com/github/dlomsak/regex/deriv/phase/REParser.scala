@@ -12,14 +12,6 @@ class RegexTokenReader(tokens: Seq[RegexToken]) extends Reader[RegexToken] {
   override def rest: Reader[RegexToken] = new RegexTokenReader(tokens.tail)
 }
 
-sealed trait RegexAST
-case object NullAST extends RegexAST // AST of regex matching no strings
-case object EmptyAST extends RegexAST // AST of regex matching exactly the empty string
-final case class OrAST(left: RegexAST, right: RegexAST) extends RegexAST
-final case class CatAST(left: RegexAST, right: RegexAST) extends RegexAST
-final case class StarAST(regex: RegexAST) extends RegexAST
-final case class CharAST(c: Char) extends RegexAST
-final case class CharClassAST(cs: Set[Char], inverted: Boolean) extends RegexAST
 
 object REParser extends Parsers {
   override type Elem = RegexToken
@@ -38,10 +30,10 @@ object REParser extends Parsers {
     term ~ ALT ~ regex ^^ { case l ~ _ ~ r => OrAST(l, r) } |
     term
 
-  def term: Parser[RegexAST] = rep1(factor) ^^ { _.reduceLeft(CatAST) }
+  def term: Parser[RegexAST] = rep1(factor) ^^ { _.reduceLeft(CatAST.apply) }
 
   def factor: Parser[RegexAST] =
-    base <~ STAR ^^ StarAST |
+    base <~ STAR ^^ StarAST.apply |
     base <~ PLUS ^^ { b => CatAST(b, StarAST(b)) } |
     base <~ HOOK ^^ { b => OrAST(EmptyAST, b) } |
     base
