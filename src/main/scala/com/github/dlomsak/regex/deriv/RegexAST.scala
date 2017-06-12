@@ -131,7 +131,7 @@ final case class CharAST(c: Char) extends RegexAST {
 }
 
 final case class CharClassAST(cs: Set[Char], inverted: Boolean) extends RegexAST {
-  def acceptsEmpty = cs.isEmpty
+  def acceptsEmpty = false
 
   def derive(c: Char) = {
     val isMember = cs.contains(c)
