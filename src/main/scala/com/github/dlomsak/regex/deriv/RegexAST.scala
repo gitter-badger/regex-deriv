@@ -95,7 +95,7 @@ final class CatAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
   }
 
   override def equals(o: Any): Boolean = o match {
-    case CatAST(l, r) if (left == l && right == r) || (left == r && right == l) => true
+    case CatAST(l, r) if left == l && right == r => true
     case _ => false
   }
 

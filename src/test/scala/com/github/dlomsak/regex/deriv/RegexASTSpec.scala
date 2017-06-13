@@ -6,8 +6,8 @@ class RegexASTSpec extends BaseSpec {
     CatAST(CatAST(CharAST('a'), CharAST('b')), CharAST('c')) shouldBe CatAST(CharAST('a'), CatAST(CharAST('b'), CharAST('c')))
   }
 
-  it should "commute over equality" in {
-    CatAST(CharAST('a'), CharAST('b')) shouldEqual CatAST(CharAST('b'), CharAST('a'))
+  it should "not commute over equality" in {
+    CatAST(CharAST('a'), CharAST('b'))  should not be CatAST(CharAST('b'), CharAST('a'))
   }
 
   "OrAST" should "associate to the right" in {
