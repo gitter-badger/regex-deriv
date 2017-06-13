@@ -7,6 +7,16 @@ sealed trait RegexAST {
   def acceptsEmpty: Boolean
 
   /**
+    * denotes whether the node is EmptyAST (used for convenience in property tests)
+    */
+  def isEmpty: Boolean = false
+
+  /**
+    * denotes whether the node is NullAST (used for convenience in property tests)
+    */
+  def isNull: Boolean = false
+
+  /**
     * determines whether a given input string matches the given regular expression
     */
   def matches(input: String): Boolean = this(input).acceptsEmpty
@@ -32,6 +42,8 @@ sealed trait RegexAST {
 case object NullAST extends RegexAST {
   def acceptsEmpty = false
 
+  override def isNull: Boolean = true
+
   def derive(c: Char) = this
 
   def getCharClasses = Set(CharClassAST.sigma)
@@ -40,6 +52,8 @@ case object NullAST extends RegexAST {
 // AST of regex matching exactly the empty string
 case object EmptyAST extends RegexAST {
   def acceptsEmpty = true
+
+  override def isEmpty: Boolean = true
 
   def derive(c: Char) = NullAST
 
@@ -68,8 +82,8 @@ object OrAST {
   def apply(left: RegexAST, right: RegexAST): RegexAST = (left, right) match {
     case (NullAST, _) => right
     case (_, NullAST) => left
-    case (l, r) if l==r => l
     case (OrAST(r, s), t) => new OrAST(r, OrAST(s, t))
+    case (l, r) if l==r => l
     case _ => new OrAST(left, right)
   }
 

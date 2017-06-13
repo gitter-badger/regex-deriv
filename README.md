@@ -12,7 +12,7 @@ Roadmap
 -------
 * ~~Lexer and parser for basic regex operators~~ (done)
 * ~~Implement regex derivatives for all AST structures and method for performing string matching~~ (done)
-* add tests(some added, need more; also consider property-based testing)
+* ~~add tests and use property-based testing~~
 * ~~CI with code coverage~~(done)
 * ~~support character classes~~
 * implement automaton construction, move away from matching via AST re-writing
