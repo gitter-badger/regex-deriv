@@ -15,7 +15,7 @@ Roadmap
 * ~~add tests and use property-based testing~~
 * ~~CI with code coverage~~(done)
 * ~~support character classes~~
-* implement automaton construction, move away from matching via AST re-writing
+* ~~implement automaton construction, move away from matching via AST re-writing~~
 * support common escape sequences such as \d for numbers
 * support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)
 * support group extraction
