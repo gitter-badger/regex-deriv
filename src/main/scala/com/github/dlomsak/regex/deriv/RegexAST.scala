@@ -176,6 +176,8 @@ final case class CharClassAST(chars: Set[Char], inverted: Boolean) extends Regex
 
   def getCharClasses = Set(this, this.copy(inverted = !inverted))
 
+  def acceptsChar(c: Char): Boolean = chars.contains(c) && !inverted || !chars.contains(c) && inverted
+
   def intersect(other: CharClassAST): CharClassAST = {
     if (!inverted && !other.inverted) {
       CharClassAST(chars.intersect(other.chars), inverted = false)
