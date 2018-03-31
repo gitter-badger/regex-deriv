@@ -19,7 +19,9 @@ class RegexASTSpec extends BaseSpec {
 
   "OrAST" should "associate to the right" in {
     forAll { (r1: RegexAST, r2: RegexAST, r3: RegexAST) =>
-      OrAST(OrAST(r1, r2), r3) should equal (OrAST(r1, OrAST(r2, r3)))
+      whenever(r1 != r2) {
+        OrAST(OrAST(r1, r2), r3) should equal(OrAST(r1, OrAST(r2, r3)))
+      }
     }
   }
 
