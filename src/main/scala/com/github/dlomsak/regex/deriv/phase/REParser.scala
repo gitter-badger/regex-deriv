@@ -27,19 +27,25 @@ object REParser extends Parsers {
   def program: Parser[RegexAST] = phrase(opt(regex)) ^^ { _.getOrElse(EmptyAST) }
 
   def regex: Parser[RegexAST] =
-    term ~ ALT ~ regex ^^ { case l ~ _ ~ r => OrAST(l, r) } |
-    term
+    term ~ opt(ALT ~ regex) ^^ {
+      case l ~ Some(_ ~ r) => OrAST(l, r)
+      case l ~ None => l
+    }
 
   def term: Parser[RegexAST] = rep1(factor) ^^ { _.reduceLeft(CatAST.apply) }
 
-  def factor: Parser[RegexAST] =
-    base <~ STAR ^^ StarAST.apply |
-    base <~ PLUS ^^ { b => CatAST(b, StarAST(b)) } |
-    base <~ HOOK ^^ { b => OrAST(EmptyAST, b) } |
-    base
+  def factor: Parser[RegexAST] = {
+    base ~ opt(STAR | PLUS | HOOK) ^^ {
+      case r ~ Some(STAR) => StarAST(r)
+      case r ~ Some(PLUS) => CatAST(r, StarAST(r))
+      case r ~ Some(HOOK) => OrAST(EmptyAST, r)
+      case r ~ None => r
+    }
+  }
 
   def base: Parser[RegexAST] =
     singleChar |
+    DOT ^^ { _ => CharClassAST.sigma } |
     LBRACKET ~> opt(CARET) ~ rep1(charRange) <~ RBRACKET ^^
       { case invert ~ chars => CharClassAST(chars.reduce(_ ++ _), invert.isDefined) } |
     LPAREN ~> regex <~ RPAREN
@@ -54,7 +60,7 @@ object REParser extends Parsers {
     literal
 
   def meta: Parser[RegexToken] =
-    LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH | CARET | DASH
+    LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH | DOT | CARET | DASH
 
   def literal: Parser[CharAST] = {
     accept("character literal", { case lit @ CHARLIT(c) => CharAST(c) })

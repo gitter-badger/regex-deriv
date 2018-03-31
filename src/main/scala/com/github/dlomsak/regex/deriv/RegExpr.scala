@@ -6,5 +6,7 @@ object RegExpr {
   def apply(regex: String): Either[RegexCompilationError, DFA[Int]] = for {
     tokens <- RELexer(regex).right
     ast <- REParser(tokens).right
-  } yield RE2DFA.mkDFA(ast)
+  } yield {
+    RE2DFA.mkDFA(ast)
+  }
 }
