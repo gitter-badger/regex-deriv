@@ -20,7 +20,11 @@ case object DASH extends RegexToken('-')
 case object BACKSLASH extends RegexToken('\\')
 case object DOT extends RegexToken('.')
 case class CHARLIT(c: Char) extends RegexToken(c)
+case class INTLIT(c: Char) extends RegexToken(c)
 
+case object LBRACE extends RegexToken('{')
+case object RBRACE extends RegexToken('}')
+case object COMMA extends RegexToken(',')
 class CharacterReader(chars: Seq[Char]) extends Reader[Char] {
   override def first: Char = chars.head
   override def atEnd: Boolean = chars.isEmpty
@@ -41,7 +45,7 @@ object RELexer extends Parsers {
 
   def program:Parser[List[RegexToken]] = phrase(rep(token))
 
-  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | dot | caret | dash | lit
+  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | dot | caret | dash | lbrace | rbrace | comma | lit
 
   def star:Parser[RegexToken] = '*' ^^ { _ => STAR }
 
@@ -67,6 +71,14 @@ object RELexer extends Parsers {
 
   def dot:Parser[RegexToken] = '.' ^^ { _ => DOT }
 
-  def lit:Parser[RegexToken] = accept("character literal", { case c => CHARLIT(c) })
+  def lit:Parser[RegexToken] = accept("character literal", {
+    case c if c.isDigit=> INTLIT(c)
+    case c=> CHARLIT(c) })
+
+  def lbrace: Parser[RegexToken] = '{' ^^ { _ => LBRACE}
+
+  def rbrace: Parser[RegexToken] = '}' ^^ { _ => RBRACE}
+
+  def comma: Parser[RegexToken] = ',' ^^ { _ => COMMA}
 }
 
