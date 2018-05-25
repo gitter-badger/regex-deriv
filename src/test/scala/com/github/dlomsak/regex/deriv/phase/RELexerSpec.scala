@@ -14,7 +14,7 @@ class RELexerSpec extends BaseSpec {
       ALT,
       BACKSLASH,
       CHARLIT('a'),
-      INTLIT('1'),
+      DIGITLIT('1'),
       HOOK,
       LBRACKET,
       LPAREN,

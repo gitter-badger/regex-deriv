@@ -15,23 +15,23 @@ class REParserSpec extends BaseSpec {
   }
 
   it should "give higher precedence to * than |" in {
-    REParser(RELexer("a|b*").right.get) shouldBe Right(OrAST(CharAST('a'),StarAST(CharAST('b'))))
+    REParser(RELexer("a|b*").right.get) shouldBe Right(OrAST(CharAST('a'), StarAST(CharAST('b'))))
   }
 
   it should "give higher precedence to + than |" in {
-    REParser(RELexer("a|b+").right.get) shouldBe Right(OrAST(CharAST('a'),CatAST(CharAST('b'), StarAST(CharAST('b')))))
+    REParser(RELexer("a|b+").right.get) shouldBe Right(OrAST(CharAST('a'), CatAST(CharAST('b'), StarAST(CharAST('b')))))
   }
 
   it should "give higher precedence to ? than |" in {
-    REParser(RELexer("a|b?").right.get) shouldBe Right(OrAST(CharAST('a'),OrAST(EmptyAST, CharAST('b'))))
+    REParser(RELexer("a|b?").right.get) shouldBe Right(OrAST(CharAST('a'), OrAST(EmptyAST, CharAST('b'))))
   }
 
   it should "give higher precedence to * than concatenation" in {
-    REParser(RELexer("ab*").right.get) shouldBe Right(CatAST(CharAST('a'),StarAST(CharAST('b'))))
+    REParser(RELexer("ab*").right.get) shouldBe Right(CatAST(CharAST('a'), StarAST(CharAST('b'))))
   }
 
   it should "give higher precedence to + than concatenation" in {
-    REParser(RELexer("ab+").right.get) shouldBe Right(CatAST(CharAST('a'),CatAST(CharAST('b'), StarAST(CharAST('b')))))
+    REParser(RELexer("ab+").right.get) shouldBe Right(CatAST(CharAST('a'), CatAST(CharAST('b'), StarAST(CharAST('b')))))
   }
 
   it should "give higher precedence to ? than concatenation" in {
@@ -46,38 +46,40 @@ class REParserSpec extends BaseSpec {
     REParser(RELexer("(a|b)*").right.get) shouldBe Right(StarAST(OrAST(CharAST('a'), CharAST('b'))))
   }
 
+  it should "give character classes higher precedence than operators" in {
+    REParser(RELexer("[a-c][d-f]*").right.get) shouldBe Right(CatAST(CharClassAST(Set('a','b','c'), false), StarAST(CharClassAST(Set('d','e','f'), false))))
+  }
+
   it should "handle repeated characters in character classes" in {
     val chars = REParser(RELexer("[a-cb-d]").right.get) match {
       case Right(CharClassAST(cs, _)) => cs
       case _ => Set.empty[Char]
     }
 
-    chars should contain ('a')
-    chars should contain ('b')
-    chars should contain ('c')
-    chars should contain ('d')
+    chars should contain('a')
+    chars should contain('b')
+    chars should contain('c')
+    chars should contain('d')
     chars shouldNot contain('-')
     chars.size shouldBe 4
   }
 
 
   it should "parse a quantifier" in {
-    try {
-
       REParser(RELexer("a{2}").right.get) shouldBe Right(CatAST(CharAST('a'), CharAST('a')))
       REParser(RELexer("a{2,4}").right.get) shouldBe Right(CatAST(CharAST('a'), CatAST(CharAST('a'), CatAST(OrAST(EmptyAST, CharAST('a')), OrAST(EmptyAST, CharAST('a'))))))
       REParser(RELexer("a{3,}").right.get) shouldBe Right(CatAST(CharAST('a'), CatAST(CharAST('a'), CatAST(CharAST('a'), StarAST(CharAST('a'))))))
-    } catch {
-      case e: Throwable => e.printStackTrace()
-    }
   }
 
-  it should "match a number" in {
-    try {
-      REParser(RELexer("2{4}").right.get) shouldBe Right(CatAST(CharAST(2), CatAST(CharAST(2), CatAST(CharAST(2), CharAST(2)))))
-    }
-    catch {
-      case e: Throwable => e.printStackTrace()
-    }
+  it should "quantify numeric characters" in {
+    REParser(RELexer("2{4}").right.get) shouldBe Right(CatAST(CharAST('2'), CatAST(CharAST('2'), CatAST(CharAST('2'), CharAST('2')))))
+  }
+
+  it should "fail parsing negative quantifiers" in {
+    REParser(RELexer("2{-2}").right.get) shouldBe 'Left
+  }
+
+  it should "treat {m,n} as {m} if n < m; this will probably change later but for now codifying intended behavior" in {
+    REParser(RELexer("2{5,2}").right.get) shouldBe Right(CatAST(CharAST('2'), CatAST(CharAST('2'), CatAST(CharAST('2'), CatAST(CharAST('2'), CharAST('2'))))))
   }
 }

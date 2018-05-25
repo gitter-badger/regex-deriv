@@ -10,14 +10,14 @@ The main goal is to provide a regex library that avoids backtracking and extra-r
 
 Roadmap
 -------
-* ~~Lexer and parser for basic regex operators~~ (done)
-* ~~Implement regex derivatives for all AST structures and method for performing string matching~~ (done)
+* ~~Lexer and parser for basic regex operators~~
+* ~~Implement regex derivatives for all AST structures and method for performing string matching~~
 * ~~add tests and use property-based testing~~
-* ~~CI with code coverage~~(done)
+* ~~CI with code coverage~~
 * ~~support character classes~~
 * ~~implement automaton construction, move away from matching via AST re-writing~~
 * support common escape sequences such as \d for numbers
-* support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)
+* ~~support bounded repetition (e.g., "r{n, m}" matches n to m occurrences of r)~~
 * support group extraction
 * support named groups ala [Regular Expression Sub-matching using Partial Derivatives](http://www.home.hs-karlsruhe.de/~suma0002/publications/ppdp12-part-deriv-sub-match.pdf) by Martin Sulzmann and Kenny Zhuo Ming Lu
 * performance testing against scala.util.matching.regex

@@ -21,6 +21,7 @@ object REParser extends Parsers {
     program(reader) match {
       case NoSuccess(msg, next) => Left(RegexParserError(msg))
       case Success(result, next) => Right(result)
+      case Error(msg, next) => Left(RegexParserError(msg))
     }
   }
 
@@ -34,28 +35,19 @@ object REParser extends Parsers {
 
   def term: Parser[RegexAST] = rep1(factor) ^^ { _.reduceLeft(CatAST.apply) }
 
-  def factor: Parser[RegexAST] = {
-    val partialFactor = base ~ opt(STAR | PLUS | HOOK) ^^ {
+  def factor: Parser[RegexAST] =  base ~ opt(STAR | PLUS | HOOK | quantifier) ^^ {
       case r ~ Some(STAR) => StarAST(r)
       case r ~ Some(PLUS) => CatAST(r, StarAST(r))
       case r ~ Some(HOOK) => OrAST(EmptyAST, r)
+      case r ~ Some((lower: Int, optUpper: Option[Int])) =>
+        val suffix = optUpper map { upper =>
+          (lower until upper).foldLeft(EmptyAST: RegexAST) { case (subtree, _) => CatAST(OrAST(r, EmptyAST), subtree) }
+        } getOrElse {
+          StarAST(r)
+        }
+        val prefix = (0 until lower).foldLeft(EmptyAST: RegexAST) { case (subtree, _) => CatAST(r, subtree) }
+        CatAST(prefix, suffix)
       case r ~ None => r
-    }
-
-    partialFactor ~ opt(quantifier) ^^ {
-      case r ~ Some(q) => quantifierToCat(r, q)
-      case r ~ None => r
-    }
-  }
-
-  def quantifierToCat(r: RegexAST, q: (Int, Option[Int])): RegexAST = {
-    q match {
-      case (1, Some(1)) => r
-      case(i, Some(1)) if i < 1 => OrAST(r, EmptyAST)
-      case(0, None) => StarAST(r)
-      case (i, Some(j)) if i < j && i <= 0 => CatAST(OrAST(r, EmptyAST), quantifierToCat(r, (i-1, Some(j-1))))
-      case (i, j) => CatAST(r, quantifierToCat(r, (i-1, j.map{_ - 1})))
-    }
   }
 
   def base: Parser[RegexAST] =
@@ -65,9 +57,6 @@ object REParser extends Parsers {
       { case invert ~ chars => CharClassAST(chars.reduce(_ ++ _), invert.isDefined) } |
     LPAREN ~> regex <~ RPAREN
 
-
-
-  def r = opt(literal).filter(_.exists(_.c.isDigit))
   def charRange: Parser[Set[Char]] = {
     literal ~ DASH ~ literal ^^ { case start ~ _ ~ stop => Set(start.c to stop.c:_*) } |
     singleChar ^^ { ch => Set(ch.c) }
@@ -81,14 +70,12 @@ object REParser extends Parsers {
   def meta: Parser[RegexToken] =
     LPAREN | RPAREN | LBRACKET | RBRACKET | PLUS | STAR | HOOK | BACKSLASH | DOT | CARET | DASH | LBRACE | RBRACE | COMMA
 
-  def literal: Parser[CharAST] = {
-    accept("character literal", { case lit @ CHARLIT(c) => CharAST(c) })
-  }
+  def literal: Parser[CharAST] = accept("character literal", { case _ @ CHARLIT(c) => CharAST(c) })
 
-  def digitLiteral: Parser[CharAST] = accept("int lit", {case _ @ INTLIT(x) => CharAST(x)})
+  def digitLiteral: Parser[CharAST] = accept("digit lit", { case _ @ DIGITLIT(x) => CharAST(x) })
 
   def int: Parser[Int] = {
-    rep1(accept("int lit", { case i @ INTLIT(x) => x})) ^^ { chars => chars.mkString.toInt}
+    rep1(accept("int lit", { case i @ DIGITLIT(x) => x})) ^^ { chars => chars.mkString.toInt }
   }
 
 
