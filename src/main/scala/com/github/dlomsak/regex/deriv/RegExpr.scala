@@ -7,6 +7,6 @@ object RegExpr {
     tokens <- RELexer(regex).right
     ast <- REParser(tokens).right
   } yield {
-    RE2DFA.mkDFA(ast)
+    RE2DFA(ast)
   }
 }
