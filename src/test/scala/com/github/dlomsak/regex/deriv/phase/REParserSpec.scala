@@ -79,7 +79,8 @@ class REParserSpec extends BaseSpec {
     REParser(RELexer("2{-2}").right.get) shouldBe 'Left
   }
 
-  it should "treat {m,n} as {m} if n < m; this will probably change later but for now codifying intended behavior" in {
-    REParser(RELexer("2{5,2}").right.get) shouldBe Right(CatAST(CharAST('2'), CatAST(CharAST('2'), CatAST(CharAST('2'), CatAST(CharAST('2'), CharAST('2'))))))
+  it should "fail when when m is greater than n in {m,n}" in {
+    println(REParser(RELexer("2{5,2}").right.get))
+    REParser(RELexer("2{5,2}").right.get) shouldBe Left(RegexParserError("In quantifier {m,n}, m is 5 and n is 2, but m cannot be greater than n."))
   }
 }

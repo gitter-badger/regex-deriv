@@ -79,10 +79,9 @@ object REParser extends Parsers {
   }
 
 
-  def quantifier: Parser[(Int, Option[Int])] = LBRACE ~> int ~ opt(COMMA) ~ opt(int) <~ RBRACE ^^ {
-    case i ~ Some(_) ~ j   => (i, j)
-    case i ~ None ~ None => (i, Some(i))
+  def quantifier: Parser[(Int, Option[Int])] = LBRACE ~> int ~ opt(COMMA) ~ opt(int) <~ RBRACE flatMap {
+    case i ~ Some(_) ~ j if i <= j.getOrElse(Int.MaxValue)  => success((i, j))
+    case i ~ None ~ None => success((i, Some(i)))
+    case i ~ Some(_) ~ Some(j) => err(s"In quantifier {m,n}, m is $i and n is $j, but m cannot be greater than n.")
   }
-
-
 }
