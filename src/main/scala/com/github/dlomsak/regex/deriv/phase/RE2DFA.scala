@@ -44,7 +44,8 @@ object RE2DFA {
     val accepting = states.filter(_.acceptsEmpty)
     // label states numerically rather than by regex
     val nStates = states.zipWithIndex.toMap
-    val nDelta = delta.map { case ((s1, cc), s2) => ((nStates(s1), cc), nStates(s2)) }
+    val nStatesS = nStates.map { case (k, v) => (k.toString, v) }
+    val nDelta = delta.map { case ((s1, cc), s2) => ((nStatesS(s1.toString), cc), nStatesS(s2.toString)) }
     // compute state -> (charClass, nextState) structure for DFA because we can't directly do Map lookups on char classes
     val nDeltaSt = nDelta.toList.map{case ((s1, cc), s2) => (s1, (cc, s2))}.groupBy(_._1).mapValues(_.map(_._2))
     DFA(nStates.values.toSet, nStates(r), accepting.map(nStates), nDeltaSt)
