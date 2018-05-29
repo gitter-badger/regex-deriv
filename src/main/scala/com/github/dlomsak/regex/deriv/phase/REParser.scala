@@ -28,8 +28,9 @@ object REParser extends Parsers {
   def program: Parser[RegexAST] = phrase(opt(regex)) ^^ { _.getOrElse(EmptyAST) }
 
   def regex: Parser[RegexAST] =
-    term ~ opt(ALT ~ regex) ^^ {
-      case l ~ Some(_ ~ r) => OrAST(l, r)
+    term ~ opt((PIPE | AMPER) ~ regex) ^^ {
+      case l ~ Some(PIPE ~ r) => OrAST(l, r)
+      case l ~ Some(AMPER ~ r) => AndAST(l, r)
       case l ~ None => l
     }
 
@@ -55,7 +56,8 @@ object REParser extends Parsers {
     DOT ^^ { _ => CharClassAST.sigma } |
     LBRACKET ~> opt(CARET) ~ rep1(charRange) <~ RBRACKET ^^
       { case invert ~ chars => CharClassAST(chars.reduce(_ ++ _), invert.isDefined) } |
-    LPAREN ~> regex <~ RPAREN
+    LPAREN ~> regex <~ RPAREN |
+    TILDE ~> regex ^^ { case r => ComplementAST(r) }
 
   def charRange: Parser[Set[Char]] = {
     literal ~ DASH ~ literal ^^ { case start ~ _ ~ stop => Set(start.c to stop.c:_*) } |

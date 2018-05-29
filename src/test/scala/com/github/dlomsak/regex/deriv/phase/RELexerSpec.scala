@@ -10,15 +10,17 @@ class RELexerSpec extends BaseSpec {
 
   it should "generate all of the defined tokens" in {
 
-    RELexer("""|\a1?[(+])*-^{,}""") shouldBe Right(Seq(
-      ALT,
+    RELexer("""|\a1~?[(+&])*-^{,}""") shouldBe Right(Seq(
+      PIPE,
       BACKSLASH,
       CHARLIT('a'),
       DIGITLIT('1'),
+      TILDE,
       HOOK,
       LBRACKET,
       LPAREN,
       PLUS,
+      AMPER,
       RBRACKET,
       RPAREN,
       STAR,

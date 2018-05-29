@@ -60,6 +60,31 @@ case object EmptyAST extends RegexAST {
   def getCharClasses = Set(CharClassAST.sigma)
 }
 
+// Complement of another AST
+final class ComplementAST(val re: RegexAST) extends RegexAST {
+  def acceptsEmpty = !re.acceptsEmpty
+
+  def derive(c: Char) = ComplementAST(re.derive(c))
+
+  def getCharClasses = re.getCharClasses
+
+  override def equals(o: scala.Any): Boolean = o match {
+    case ComplementAST(r2) if re == r2 => true
+    case _ => false
+  }
+
+  override def toString: String = s"ComplementAST($re)"
+}
+
+object ComplementAST {
+  def apply(re: RegexAST): RegexAST = re match {
+    case ComplementAST(r) => r
+    case _ => new ComplementAST(re)
+  }
+
+  def unapply(arg: ComplementAST): Option[RegexAST] = Some(arg.re)
+}
+
 final class OrAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
   def acceptsEmpty = left.acceptsEmpty || right.acceptsEmpty
 
@@ -82,12 +107,43 @@ object OrAST {
   def apply(left: RegexAST, right: RegexAST): RegexAST = (left, right) match {
     case (NullAST, _) => right
     case (_, NullAST) => left
+    case (ComplementAST(NullAST), r) => ComplementAST(NullAST)
+    case (r, ComplementAST(NullAST)) => ComplementAST(NullAST)
     case (OrAST(r, s), t) => new OrAST(r, OrAST(s, t))
     case (l, r) if l==r => l
     case _ => new OrAST(left, right)
   }
 
   def unapply(arg: OrAST): Option[(RegexAST, RegexAST)] = Some(arg.left, arg.right)
+}
+
+final class AndAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
+  def acceptsEmpty = left.acceptsEmpty && right.acceptsEmpty
+
+  def derive(c: Char) = AndAST(left.derive(c), right.derive(c))
+
+  def getCharClasses = CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
+
+  override def equals(o: Any): Boolean = o match {
+    case AndAST(l, r) if (left == l && right == r) || (left == r && right == l) => true
+    case _ => false
+  }
+
+  override def toString: String = s"AndAST($left, $right)"
+}
+
+object AndAST {
+  def apply(left: RegexAST, right: RegexAST): RegexAST = (left, right) match {
+    case (NullAST, _) => NullAST
+    case (_, NullAST) => NullAST
+    case (ComplementAST(NullAST), r) => r
+    case (r, ComplementAST(NullAST)) => r
+    case (AndAST(r, s), t) => new AndAST(r, AndAST(s, t))
+    case (l, r) if l==r => l
+    case _ => new AndAST(left, right)
+  }
+
+  def unapply(arg: AndAST): Option[(RegexAST, RegexAST)] = Some(arg.left, arg.right)
 }
 
 final class CatAST(val left: RegexAST, val right: RegexAST) extends RegexAST {

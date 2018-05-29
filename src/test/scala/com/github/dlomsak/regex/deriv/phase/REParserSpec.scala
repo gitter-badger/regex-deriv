@@ -18,8 +18,16 @@ class REParserSpec extends BaseSpec {
     REParser(RELexer("a|b*").right.get) shouldBe Right(OrAST(CharAST('a'), StarAST(CharAST('b'))))
   }
 
+  it should "give higher precedence to operators than ~" in {
+    REParser(RELexer("a~b*").right.get) shouldBe Right(CatAST(CharAST('a'), ComplementAST(StarAST(CharAST('b')))))
+  }
+
   it should "give higher precedence to + than |" in {
     REParser(RELexer("a|b+").right.get) shouldBe Right(OrAST(CharAST('a'), CatAST(CharAST('b'), StarAST(CharAST('b')))))
+  }
+
+  it should "give same precedence to & as |" in {
+    REParser(RELexer("a*&ab*").right.get) shouldBe Right(AndAST(StarAST(CharAST('a')), CatAST(CharAST('a'), StarAST(CharAST('b')))))
   }
 
   it should "give higher precedence to ? than |" in {
@@ -80,7 +88,6 @@ class REParserSpec extends BaseSpec {
   }
 
   it should "fail when when m is greater than n in {m,n}" in {
-    println(REParser(RELexer("2{5,2}").right.get))
     REParser(RELexer("2{5,2}").right.get) shouldBe Left(RegexParserError("In quantifier {m,n}, m is 5 and n is 2, but m cannot be greater than n."))
   }
 }

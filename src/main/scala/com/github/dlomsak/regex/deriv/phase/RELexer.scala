@@ -9,7 +9,9 @@ import scala.util.parsing.input.{NoPosition, Position, Reader}
 sealed abstract class RegexToken(val asChar: Char)
 case object STAR extends RegexToken('*')
 case object PLUS extends RegexToken('+')
-case object ALT extends RegexToken('|')
+case object PIPE extends RegexToken('|')
+case object AMPER extends RegexToken('&')
+case object TILDE extends RegexToken('~')
 case object HOOK extends RegexToken('?')
 case object LPAREN extends RegexToken('(')
 case object RPAREN extends RegexToken(')')
@@ -45,13 +47,17 @@ object RELexer extends Parsers {
 
   def program:Parser[List[RegexToken]] = phrase(rep(token))
 
-  def token = star | plus | hook | alt | lparen | rparen | lbracket | rbracket | backslash | dot | caret | dash | lbrace | rbrace | comma | lit
+  def token = star | plus | hook | disj | conj | neg | lparen | rparen | lbracket | rbracket | backslash | dot | caret | dash | lbrace | rbrace | comma | lit
 
   def star:Parser[RegexToken] = '*' ^^ { _ => STAR }
 
   def plus:Parser[RegexToken] = '+' ^^ { _ => PLUS }
 
-  def alt:Parser[RegexToken] = '|' ^^ { _ => ALT }
+  def disj:Parser[RegexToken] = '|' ^^ { _ => PIPE }
+
+  def conj:Parser[RegexToken] = '&' ^^ { _ => AMPER }
+
+  def neg:Parser[RegexToken] = '~' ^^ { _ => TILDE }
 
   def hook:Parser[RegexToken] = '?' ^^ { _ => HOOK }
 
