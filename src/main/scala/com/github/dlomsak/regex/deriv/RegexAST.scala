@@ -1,5 +1,7 @@
 package com.github.dlomsak.regex.deriv
 
+sealed case class Derivations(byChar: Map[Char, RegexAST], default: RegexAST)
+
 sealed trait RegexAST {
     /**
     * denotes whether the regex matches the empty string (helper function for eval and derive)
@@ -21,11 +23,17 @@ sealed trait RegexAST {
     */
   def matches(input: String): Boolean = this(input).acceptsEmpty
 
+  def derivations: Derivations
+
   /**
     * Computes the derivative of a regex with respect to a single character. That is, the regex that matches the
     * remainder of the input given c is consumed. The expression is also simplified along the way.
     */
-  def derive(c: Char): RegexAST
+  def derive(c: Char): RegexAST = {
+    val r = derivations.byChar.getOrElse(c, derivations.default)
+    r
+  }
+
 
   /**
     * perform derivation on the expression for a string of characters
@@ -40,33 +48,33 @@ sealed trait RegexAST {
 
 // AST of regex matching no strings
 case object NullAST extends RegexAST {
-  def acceptsEmpty = false
+  val acceptsEmpty = false
 
-  override def isNull: Boolean = true
+  override val isNull: Boolean = true
 
-  def derive(c: Char) = this
+  val derivations = Derivations(Map.empty, this)
 
-  def getCharClasses = Set(CharClassAST.sigma)
+  val getCharClasses = Set(CharClassAST.sigma)
 }
 
 // AST of regex matching exactly the empty string
 case object EmptyAST extends RegexAST {
-  def acceptsEmpty = true
+  val acceptsEmpty = true
 
-  override def isEmpty: Boolean = true
+  override val isEmpty: Boolean = true
 
-  def derive(c: Char) = NullAST
+  val derivations = Derivations(Map.empty, NullAST)
 
-  def getCharClasses = Set(CharClassAST.sigma)
+  val getCharClasses = Set(CharClassAST(Set.empty, inverted = true))
 }
 
 // Complement of another AST
 final class ComplementAST(val re: RegexAST) extends RegexAST {
-  def acceptsEmpty = !re.acceptsEmpty
+  val acceptsEmpty = !re.acceptsEmpty
 
-  def derive(c: Char) = ComplementAST(re.derive(c))
+  val derivations = Derivations(re.derivations.byChar.mapValues(ComplementAST.apply), ComplementAST(re.derivations.default))
 
-  def getCharClasses = re.getCharClasses
+  val getCharClasses = re.getCharClasses
 
   override def equals(o: scala.Any): Boolean = o match {
     case ComplementAST(r2) if re == r2 => true
@@ -86,18 +94,22 @@ object ComplementAST {
 }
 
 final class OrAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
-  def acceptsEmpty = left.acceptsEmpty || right.acceptsEmpty
+  val acceptsEmpty = left.acceptsEmpty || right.acceptsEmpty
 
-  def derive(c: Char) = OrAST(left.derive(c), right.derive(c))
+  val derivations = {
+    val domain = left.derivations.byChar.keySet ++ right.derivations.byChar.keySet
+    val deriv = domain.toSeq.map { c => c -> OrAST(left.derive(c), right.derive(c)) }
+    Derivations(deriv.toMap, NullAST)
+  }
 
-  def getCharClasses = CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
+  val getCharClasses = CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
 
   override def equals(o: Any): Boolean = o match {
     case OrAST(l, r) if (left == l && right == r) || (left == r && right == l) => true
     case _ => false
   }
 
-  override def toString: String = s"OrAST($left, $right)"
+  override val toString: String = s"OrAST($left, $right)"
 }
 
 /*
@@ -118,18 +130,22 @@ object OrAST {
 }
 
 final class AndAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
-  def acceptsEmpty = left.acceptsEmpty && right.acceptsEmpty
+  val acceptsEmpty = left.acceptsEmpty && right.acceptsEmpty
 
-  def derive(c: Char) = AndAST(left.derive(c), right.derive(c))
+  val derivations = {
+    val domain = left.derivations.byChar.keySet ++ right.derivations.byChar.keySet
+    val deriv = domain.toSeq.map { c => c -> AndAST(left.derive(c), right.derive(c)) }
+    Derivations(deriv.toMap, NullAST)
+  }
 
-  def getCharClasses = CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
+  val getCharClasses = CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
 
   override def equals(o: Any): Boolean = o match {
     case AndAST(l, r) if (left == l && right == r) || (left == r && right == l) => true
     case _ => false
   }
 
-  override def toString: String = s"AndAST($left, $right)"
+  override val toString: String = s"AndAST($left, $right)"
 }
 
 object AndAST {
@@ -147,18 +163,19 @@ object AndAST {
 }
 
 final class CatAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
-  def acceptsEmpty = left.acceptsEmpty && right.acceptsEmpty
+  val acceptsEmpty = left.acceptsEmpty && right.acceptsEmpty
 
-  def derive(c: Char) = {
-    val dLeft = CatAST(left.derive(c), right)
+  val derivations = {
     if (left.acceptsEmpty) {
-      OrAST(dLeft, right.derive(c))
+      val domain = left.derivations.byChar.keys ++ right.derivations.byChar.keys
+      val deriv = domain.toSeq.map { c => c -> OrAST(CatAST(left.derive(c), right), right.derive(c)) }
+      Derivations(deriv.toMap, NullAST)
     } else {
-      dLeft
+      Derivations(left.derivations.byChar.mapValues(v => CatAST(v, right)), NullAST)
     }
   }
 
-  def getCharClasses = if (!left.acceptsEmpty) {
+  val getCharClasses = if (!left.acceptsEmpty) {
     left.getCharClasses
   } else {
     CharClassAST.conjunction(left.getCharClasses, right.getCharClasses)
@@ -169,7 +186,7 @@ final class CatAST(val left: RegexAST, val right: RegexAST) extends RegexAST {
     case _ => false
   }
 
-  override def toString: String = s"CatAST($left, $right)"
+  override val toString: String = s"CatAST($left, $right)"
 }
 
 object CatAST {
@@ -187,18 +204,18 @@ object CatAST {
 
 
 final class StarAST(val re: RegexAST) extends RegexAST {
-  def acceptsEmpty = true
+  val acceptsEmpty = true
 
-  def derive(c: Char) = CatAST(re.derive(c), this)
+  val derivations = Derivations(re.derivations.byChar.mapValues(r => CatAST(r, this)), NullAST)
 
-  def getCharClasses = re.getCharClasses
+  val getCharClasses = re.getCharClasses
 
   override def equals(o: scala.Any): Boolean = o match {
     case StarAST(r2) if re == r2 => true
     case _ => false
   }
 
-  override def toString: String = s"StarAST($re)"
+  override val toString: String = s"StarAST($re)"
 }
 
 object StarAST {
@@ -214,20 +231,19 @@ object StarAST {
 
 
 final case class CharAST(c: Char) extends RegexAST {
-  def acceptsEmpty = false
+  val acceptsEmpty = false
 
-  def derive(cin: Char) = if (c == cin) EmptyAST else NullAST
+  val derivations = Derivations(Map(c -> EmptyAST), NullAST)
 
-  def getCharClasses = Set(CharClassAST(Set(c), inverted = false), CharClassAST(Set(c), inverted = true))
+  val getCharClasses = Set(CharClassAST(Set(c), inverted = false), CharClassAST(Set(c), inverted = true))
 }
 
 final case class CharClassAST(chars: Set[Char], inverted: Boolean) extends RegexAST {
-  def acceptsEmpty = false
+  val acceptsEmpty = false
 
-  def derive(c: Char) = {
-    val isMember = chars.contains(c)
-    val isMatch = if (inverted) !isMember else isMember
-    if (isMatch) EmptyAST else NullAST
+  val derivations = {
+    val (present, absent) = if (inverted) (NullAST, EmptyAST) else (EmptyAST, NullAST)
+    Derivations(chars.toSeq.map(c => c -> present).toMap, absent)
   }
 
   def getCharClasses = Set(this, this.copy(inverted = !inverted))
